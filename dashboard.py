@@ -193,7 +193,7 @@ def update_data():
 
     # เพิ่มข้อมูลใหม่
     new_row = pd.DataFrame([{
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'timestamp': (datetime.now() + timedelta(hours=7)).strftime('%Y-%m-%d %H:%M:%S'),
         'BTC_price': round(btc_price, 2),
         'ETH_price': round(eth_price, 2),
         'Gold_price': round(gold_price, 2)
