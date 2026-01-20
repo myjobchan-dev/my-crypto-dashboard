@@ -163,10 +163,12 @@ def update_data():
     # อ่านข้อมูลเดิม
     df = pd.read_csv(csv_file)
 
-    # ตั้งค่าราคาเริ่มต้น (ใช้ถ้า API ล้มเหลว)
-    last_btc = 45000.0 if len(df) == 0 else float(df['BTC_price'].iloc[-1]) if not df.empty else 45000.0
-    last_eth = 2500.0 if len(df) == 0 else float(df['ETH_price'].iloc[-1]) if not df.empty else 2500.0
-    last_gold = 4672.70 if len(df) == 0 else float(df['Gold_price'].iloc[-1]) if not df.empty else 4672.70
+    # ========================================================
+    # ✨ FIX 1: ปรับราคาเริ่มต้นให้ใกล้เคียงความจริง (แก้กราฟแบน)
+    # ========================================================
+    last_btc = 90000.0 if len(df) == 0 else float(df['BTC_price'].iloc[-1]) if not df.empty else 90000.0
+    last_eth = 3000.0 if len(df) == 0 else float(df['ETH_price'].iloc[-1]) if not df.empty else 3000.0
+    last_gold = 2600.0 if len(df) == 0 else float(df['Gold_price'].iloc[-1]) if not df.empty else 2600.0
 
     try:
         # ดึงราคา BTC & ETH จาก CoinGecko API (ฟรี, ไม่ต้อง API key)
@@ -188,10 +190,10 @@ def update_data():
         btc_price = last_btc * (1 + random.uniform(-0.005, 0.005))
         eth_price = last_eth * (1 + random.uniform(-0.005, 0.005))
 
-    # จำลองราคาทองคำ (4672.70 +/- ความผันผวนเล็กน้อย)
-    gold_price = 4672.70 + random.uniform(-50, 50)
+    # จำลองราคาทองคำ (2600 +/- ความผันผวนเล็กน้อย)
+    gold_price = last_gold + random.uniform(-5, 5)
 
-    # เพิ่มข้อมูลใหม่
+    # เพิ่มข้อมูลใหม่ (เวลาไทย +7)
     new_row = pd.DataFrame([{
         'timestamp': (datetime.now() + timedelta(hours=7)).strftime('%Y-%m-%d %H:%M:%S'),
         'BTC_price': round(btc_price, 2),
@@ -540,6 +542,12 @@ def main():
 
     st.sidebar.markdown("---")
 
+    # ✨ ปุ่มล้างข้อมูลกราฟ (เพิ่มตรงนี้)
+    if st.sidebar.button('🗑️ ล้างข้อมูลกราฟ (Reset Data)'):
+        if os.path.exists('crypto_prices.csv'):
+            os.remove('crypto_prices.csv')
+            st.rerun()
+
     # Auto Refresh Settings
     st.sidebar.markdown("### ⚙️ การตั้งค่า")
     auto_refresh = st.sidebar.checkbox('🔄 อัปเดตอัตโนมัติ', value=True)
@@ -566,173 +574,4 @@ def main():
             delta=f"{btc_analysis['change_pct']:.2f}%"
         )
 
-        # 🤖 TIER 1 AI: Display AI Signal Box
-        st.markdown(f"""
-        <div class='ai-signal-box {btc_analysis['ai_signal_class']}'>
-            {btc_analysis['ai_signal_text']}
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown(f"""
-        <div class='metric-card'>
-            <b>แนวโน้ม:</b> {btc_analysis['trend']}<br>
-            <b>MA(20):</b> {btc_analysis['ma_signal']}<br>
-            <b>RSI:</b> {btc_analysis['rsi_signal']}
-        </div>
-        """, unsafe_allow_html=True)
-        st.plotly_chart(create_chart(df, 'BTC_price', '📈 Bitcoin (BTC)'), use_container_width=True)
-
-    # Ethereum Column
-    with col2:
-        st.markdown("### 🔵 Ethereum (ETH)")
-        eth_analysis = analyze_trend(df, 'ETH_price')
-        st.metric(
-            label="ราคาปัจจุบัน",
-            value=f"${eth_analysis['current']:,.2f}",
-            delta=f"{eth_analysis['change_pct']:.2f}%"
-        )
-
-        # 🤖 TIER 1 AI: Display AI Signal Box
-        st.markdown(f"""
-        <div class='ai-signal-box {eth_analysis['ai_signal_class']}'>
-            {eth_analysis['ai_signal_text']}
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown(f"""
-        <div class='metric-card'>
-            <b>แนวโน้ม:</b> {eth_analysis['trend']}<br>
-            <b>MA(20):</b> {eth_analysis['ma_signal']}<br>
-            <b>RSI:</b> {eth_analysis['rsi_signal']}
-        </div>
-        """, unsafe_allow_html=True)
-        st.plotly_chart(create_chart(df, 'ETH_price', '📈 Ethereum (ETH)'), use_container_width=True)
-
-    # Gold Column
-    with col3:
-        st.markdown("### 🟡 ทองคำ (Gold)")
-        gold_analysis = analyze_trend(df, 'Gold_price')
-        st.metric(
-            label="ราคาปัจจุบัน",
-            value=f"${gold_analysis['current']:,.2f}",
-            delta=f"{gold_analysis['change_pct']:.2f}%"
-        )
-
-        # 🤖 TIER 1 AI: Display AI Signal Box
-        st.markdown(f"""
-        <div class='ai-signal-box {gold_analysis['ai_signal_class']}'>
-            {gold_analysis['ai_signal_text']}
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown(f"""
-        <div class='metric-card'>
-            <b>แนวโน้ม:</b> {gold_analysis['trend']}<br>
-            <b>MA(20):</b> {gold_analysis['ma_signal']}<br>
-            <b>RSI:</b> {gold_analysis['rsi_signal']}
-        </div>
-        """, unsafe_allow_html=True)
-        st.plotly_chart(create_chart(df, 'Gold_price', '📈 ทองคำ (Gold)'), use_container_width=True)
-
-    st.markdown("---")
-
-    # ========== BOTTOM SECTION ==========
-    st.markdown("<h2 style='text-align: center; color: #00ffff;'>📊 ข้อมูลเพิ่มเติม</h2>", unsafe_allow_html=True)
-
-    bottom_col1, bottom_col2 = st.columns(2)
-
-    # Fear & Greed Index
-    with bottom_col1:
-        st.markdown("### 😱 Fear & Greed Index")
-        fg_value, fg_class, fg_advice = get_fear_greed_index()
-        st.markdown(f"""
-        <div class='fear-greed-box'>
-            <div class='fear-greed-value'>{fg_value}</div>
-            <h3 style='color: #FFA500;'>{fg_class}</h3>
-            <p style='color: white; font-size: 1.2rem;'>{fg_advice}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # 🤖 TIER 2 AI: Top 10 Crypto Table (WITH NEW AI COLUMN + HARDCODED BACKUP)
-    with bottom_col2:
-        st.markdown("### 🏆 Top 10 สกุลเงินดิจิทัล (มูลค่าตลาด)")
-        top10_df = get_top_10_crypto()
-        # ตารางจะไม่มีวันว่าง - มี hardcoded backup เสมอ!
-        st.dataframe(top10_df, use_container_width=True, hide_index=True)
-
-    st.markdown("---")
-
-    # ========== HOW-TO SECTION (EXPANDER) ==========
-    with st.expander("📖 วิธีใช้งานแดชบอร์ด"):
-        st.markdown("""
-        ### 🎯 คู่มือการใช้งาน
-
-        **1. กราฟราคา (Charts)**
-        - 📈 **เส้นสีฟ้า (Cyan)**: แสดงราคาปัจจุบันแบบ Real-time
-        - 📊 **เส้นส้มแบบขีด (Orange Dash)**: ค่าเฉลี่ย 20 รอบ (Moving Average)
-        - 🟢 **จุดสีเขียว**: สัญญาณขาขึ้น (Bullish Signal)
-        - 🔴 **จุดสีแดง**: สัญญาณขาลง (Bearish Signal)
-
-        **2. 🤖 TIER 1 AI: สัญญาณการลงทุนอัจฉริยะ (BTC/ETH/Gold)**
-        - 🚀 **โอกาสสะสม (Strong Buy)**: ราคา > MA และ RSI < 45 = โอกาสซื้อที่ดี!
-        - 🟢 **ถือรันเทรนด์ (Hold/Uptrend)**: ราคา > MA = แนวโน้มขาขึ้น ถือต่อ
-        - 🔴 **ระวังแรงขาย (Sell Signal)**: ราคา < MA และ RSI > 55 = พิจารณาขาย
-        - ⚪ **ชะลอการลงทุน (Wait)**: สัญญาณไม่ชัดเจน = รอจังหวะที่ดีกว่า
-
-        **3. ตัวชี้วัดทางเทคนิค**
-        - **MA(20)**: ถ้าราคาอยู่เหนือ MA = แนวโน้มขาขึ้น
-        - **RSI (Relative Strength Index)**:
-          - RSI > 70: ตลาด Overbought (ซื้อมากเกินไป)
-          - RSI < 30: ตลาด Oversold (ขายมากเกินไป)
-          - RSI 30-70: ตลาดปกติ
-
-        **4. Fear & Greed Index**
-        - 0-25: **Extreme Fear** 😱 = โอกาสซื้อ
-        - 26-45: **Fear** 😟 = พิจารณาซื้อ
-        - 46-55: **Neutral** 😐 = รอสัญญาณ
-        - 56-75: **Greed** 😊 = ระวังการปรับฐาน
-        - 76-100: **Extreme Greed** 🤑 = พิจารณาขายทำกำไร
-
-        **5. 🤖 TIER 2 AI: คำแนะนำ AI (Top 10 Table)**
-        - 🔥 **พุ่งแรง (Momentum)**: ราคาขึ้น ≥ 3% = โมเมนตัมแรง!
-        - 🟢 **เก็บของ (Accumulate)**: ราคาขึ้น 0-3% = เหมาะเก็บสะสม
-        - 🔻 **ย่อตัว (Correction)**: ราคาลง 0-3% = กำลังปรับฐาน
-        - 🩸 **หนีตาย (Panic Sell)**: ราคาลง < -3% = แรงขายหนัก!
-
-        **6. การตั้งค่า**
-        - ✅ เปิด **อัปเดตอัตโนมัติ** เพื่อรับข้อมูล Real-time
-        - ⏱️ ปรับ **ช่วงเวลาอัปเดต** ตามที่ต้องการ (30-300 วินาที)
-        - 📰 คลิกลิงก์ **ข่าวสาร** ด้านข้างเพื่ออ่านข่าวคริปโต
-
-        **7. แหล่งข้อมูล**
-        - ราคา BTC/ETH: CoinGecko API (Free, Real-time)
-        - ราคาทองคำ: จำลองข้อมูล (ฐาน $4,672.70)
-        - Fear & Greed: Alternative.me API
-        - Top 10: CoinGecko Market Data
-
-        **⚠️ คำเตือน**
-        - ข้อมูลนี้ใช้เพื่อการศึกษาและการวิเคราะห์เท่านั้น
-        - ไม่ใช่คำแนะนำในการลงทุน
-        - ควรศึกษาและวิเคราะห์เพิ่มเติมก่อนตัดสินใจลงทุน
-
-        ---
-        🚀 **พัฒนาโดย**: Claude + Streamlit | 📅 **อัปเดต**: 2026
-
-        **🆕 ฟีเจอร์ใหม่:**
-        - 🤖 **TIER 1 AI**: สัญญาณการลงทุนอัจฉริยะบนกราฟหลัก (BTC/ETH/Gold)
-        - 🤖 **TIER 2 AI**: คำแนะนำการลงทุนใน Top 10 Table แบบเรียลไทม์
-        - ♻️ **Auto-Reset**: รีเซ็ตกราฟอัตโนมัติเมื่อข้อมูลเก่ากว่า 1 ชั่วโมง
-        - 🛡️ **Error Recovery**: จัดการข้อผิดพลาด API อย่างชาญฉลาด
-        - 🔒 **Hardcoded Backup**: ตาราง Top 10 ไม่มีวันว่างเปล่า!
-        """)
-
-    # ========== AUTO REFRESH LOGIC ==========
-    if auto_refresh:
-        time.sleep(refresh_interval)
-        st.rerun()
-
-# ========================================
-# RUN
-# ========================================
-if __name__ == "__main__":
-    main()
+        # 🤖 TIER
