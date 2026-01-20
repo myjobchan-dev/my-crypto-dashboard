@@ -11,7 +11,7 @@ import random
 # PAGE CONFIG
 # ========================================
 st.set_page_config(
-    page_title="📈 กระดานวิเคราะห์ราคาสินทรัพย์",
+    page_title="กระดานวิเคราะห์ราคา",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
