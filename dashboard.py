@@ -517,7 +517,7 @@ def analyze_trend(df, col):
 # ========================================
 def main():
     # ========== HEADER WITH CLOCK ==========
-    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    current_time = (datetime.now() + timedelta(hours=7)).strftime('%Y-%m-%d %H:%M:%S')
     st.markdown(f"<h1 style='text-align: center;'>📈 กระดานวิเคราะห์ราคา</h1>", unsafe_allow_html=True)
     st.markdown(f"<div class='clock'>🕐 {current_time}</div>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #888;'>ข้อมูลเรียลไทม์จาก CoinGecko API 🚀 | พร้อม AI Decision Support 🤖</p>", unsafe_allow_html=True)
