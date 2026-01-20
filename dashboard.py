@@ -127,7 +127,7 @@ def update_data():
             if len(df) > 0 and 'timestamp' in df.columns:
                 # ตรวจสอบ timestamp ล่าสุด
                 last_timestamp = pd.to_datetime(df['timestamp'].iloc[-1])
-                current_time = datetime.now()
+                current_time = pd.Timestamp.now() + pd.Timedelta(hours=7)
                 time_difference = current_time - last_timestamp
 
                 # ถ้าข้อมูลเก่ากว่า 1 ชั่วโมง -> ลบไฟล์และเริ่มใหม่
